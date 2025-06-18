@@ -3,8 +3,9 @@ import {
     useContext,
     useEffect,
     useState,
-    ReactNode,
+
 } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, setJwtToken } from './api';
 
@@ -49,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = async (username: string, password: string) => {
         try {
+            // Send the plain password (over HTTPS) to the backend
             const response = await api.post('/api/login', { username, password });
             const { token, is_admin } = response.data;
 
@@ -74,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const logout = () => {
         setToken(null);
         setUser(null);
+        localStorage.removeItem('token');
         localStorage.removeItem('jwtToken');
         localStorage.removeItem('user');
         setJwtToken('');

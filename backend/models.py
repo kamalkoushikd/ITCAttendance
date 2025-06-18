@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from argon2 import PasswordHasher
 
 Base = declarative_base()
 
@@ -32,6 +33,13 @@ class Vendor(Base):
     vendor_name = Column(String, primary_key=True)
     # Add additional vendor fields if needed
 
+class Designation(Base):
+    __tablename__ = 'designation'
+    designation_id = Column(Integer, primary_key=True, autoincrement=True)
+    designation = Column(String, nullable=False)
+    vendor_name = Column(String, ForeignKey('vendor.vendor_name'), nullable=False)
+    vendor = relationship('Vendor')
+
 class Location(Base):
     __tablename__ = 'location'
     location = Column(String, primary_key=True)
@@ -42,11 +50,23 @@ class Approver(Base):
     emp_id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
-    password = Column(String, nullable=False)
-    manager_emp_id = Column(String, nullable=True)
+    password_hash = Column(String, nullable=False)
+    manager_emp_id = Column(String, nullable=False)
     # manager = relationship('Approver', remote_side=[emp_id], backref='subordinates')
-    manager_name = Column(String)
-    manager_email = Column(String)
+
+    manager_name = Column(String, nullable=False)
+    manager_email = Column(String, nullable=False)
+
+    def set_password(self, password: str):
+        ph = PasswordHasher()
+        self.password_hash = ph.hash(password)
+
+    def verify_password(self, password: str) -> bool:
+        ph = PasswordHasher()
+        try:
+            return ph.verify(self.password_hash, password)
+        except Exception:
+            return False
 
 class Employee(Base):
     __tablename__ = 'employee'
@@ -58,19 +78,22 @@ class Employee(Base):
     vendor_name = Column(String, ForeignKey('vendor.vendor_name'), nullable=False)
     approver_emp_id = Column(String, ForeignKey('approver.emp_id'), nullable=False)
     billing_rule_id = Column(String, ForeignKey('billing_cycle_rule.rule_id'), nullable=False)
+    designation_id = Column(Integer, ForeignKey('designation.designation_id'), nullable=False)
+    dob = Column(Date, nullable=False)
     doj = Column(Date, nullable=False)
     resignation_date = Column(Date, nullable=True)
     resigned = Column(Boolean, default=False)
-
     location_rel = relationship('Location')
     vendor = relationship('Vendor')
     approver = relationship('Approver')
     billing_rule = relationship('BillingCycleRule')
+    designation = relationship('Designation')
 
 class MonthlyAttendance(Base):
     __tablename__ = 'monthly_attendance'
     id = Column(Integer, primary_key=True)
     emp_id = Column(String, ForeignKey('employee.emp_id'), nullable=False)
+    approver_emp_id = Column(String, ForeignKey('approver.emp_id'), nullable=False)
     year = Column(Integer, nullable=False)
     month = Column(Integer, nullable=False)
     working_days = Column(Integer, nullable=False)

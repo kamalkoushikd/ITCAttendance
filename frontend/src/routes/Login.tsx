@@ -24,8 +24,13 @@ export default function Login() {
 
         try {
             const success = await login(form.username, form.password);
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
             if (success) {
-                navigate('/');
+                if (user.is_admin) {
+                    navigate('/');
+                } else {
+                    navigate('/attendance-home');
+                }
             } else {
                 setError('Invalid credentials');
             }

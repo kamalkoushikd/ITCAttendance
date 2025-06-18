@@ -3,6 +3,8 @@ import { fetchLocations, postData, updateData, deleteData } from '../api/api';
 import { MapPin } from 'lucide-react';
 import { useAuthTokenSync } from '../api/auth';
 import { motion } from 'framer-motion';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function AddLocation() {
     useAuthTokenSync();
@@ -12,6 +14,7 @@ export default function AddLocation() {
     const [isLoading, setIsLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [editLocation, setEditLocation] = useState<string | null>(null);
+    const [showConfirm, setShowConfirm] = useState<{ open: boolean, location: any | null }>({ open: false, location: null });
 
     useEffect(() => {
         const getLocations = async () => {
@@ -45,11 +48,25 @@ export default function AddLocation() {
         setForm({ location: '', state: '' });
     };
 
-    const handleDelete = async (loc: any) => {
-        if (window.confirm(`Delete location '${loc.location}'?`)) {
-            await deleteData('locations', loc.location);
-            setLocations(await fetchLocations());
+    const handleDelete = (location: any) => {
+        setShowConfirm({ open: true, location });
+    };
+
+    const confirmDelete = async () => {
+        if (showConfirm.location) {
+            try {
+                await deleteData('locations', showConfirm.location.location);
+                setLocations(await fetchLocations());
+                toast.success('Location deleted successfully');
+            } catch {
+                toast.error('Failed to delete location');
+            }
         }
+        setShowConfirm({ open: false, location: null });
+    };
+
+    const cancelDelete = () => {
+        setShowConfirm({ open: false, location: null });
     };
 
     const handleSubmitWrapper = async (e: React.FormEvent) => {
@@ -187,6 +204,29 @@ export default function AddLocation() {
                     </div>
                 </motion.div>
             </div>
+            {showConfirm.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-900">Confirm Delete</h2>
+                        <p className="mb-6 text-gray-700">Are you sure you want to delete location <span className="font-bold">{showConfirm.location?.location}</span>?</p>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={cancelDelete} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold">Cancel</button>
+                            <button onClick={confirmDelete} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                aria-label="Notification Toast"
+            />
         </motion.div>
     );
 }

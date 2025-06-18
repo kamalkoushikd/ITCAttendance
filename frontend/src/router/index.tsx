@@ -7,6 +7,10 @@ import AddLocation from '../routes/AddLocation';
 import AddBillingCycleRule from '../routes/AddBillingCycleRule';
 import Home from '../routes/Home';
 import Login from '../routes/Login';
+import RequireAuth from '../components/RequireAuth';
+import AddDesignation from '../routes/AddDesignation';
+import AttendanceHome from '../routes/AttendanceHome';
+import AttendanceTransactions from '../routes/AttendanceTransactions';
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
     return (
@@ -29,12 +33,15 @@ export default function AppRouter() {
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
                 <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-                <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-                <Route path="/add-employee" element={<PageTransition><AddEmployee /></PageTransition>} />
-                <Route path="/add-vendor" element={<PageTransition><AddVendor /></PageTransition>} />
-                <Route path="/add-approver" element={<PageTransition><AddApprover /></PageTransition>} />
-                <Route path="/add-location" element={<PageTransition><AddLocation /></PageTransition>} />
-                <Route path="/add-billing-cycle-rule" element={<PageTransition><AddBillingCycleRule /></PageTransition>} />
+                <Route path="/" element={<RequireAuth adminOnly={true}><PageTransition><Home /></PageTransition></RequireAuth>} />
+                <Route path="/add-employee" element={<RequireAuth adminOnly={true}><PageTransition><AddEmployee /></PageTransition></RequireAuth>} />
+                <Route path="/add-vendor" element={<RequireAuth adminOnly={true}><PageTransition><AddVendor /></PageTransition></RequireAuth>} />
+                <Route path="/add-approver" element={<RequireAuth adminOnly={true}><PageTransition><AddApprover /></PageTransition></RequireAuth>} />
+                <Route path="/add-location" element={<RequireAuth adminOnly={true}><PageTransition><AddLocation /></PageTransition></RequireAuth>} />
+                <Route path="/add-billing-cycle-rule" element={<RequireAuth adminOnly={true}><PageTransition><AddBillingCycleRule /></PageTransition></RequireAuth>} />
+                <Route path="/add-designation" element={<RequireAuth adminOnly={true}><AddDesignation /></RequireAuth>} />
+                <Route path="/attendance-home" element={<RequireAuth><PageTransition><AttendanceHome /></PageTransition></RequireAuth>} />
+                <Route path="/attendance-transactions" element={<RequireAuth><PageTransition><AttendanceTransactions /></PageTransition></RequireAuth>} />
             </Routes>
         </AnimatePresence>
     );

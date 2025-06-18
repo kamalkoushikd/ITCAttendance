@@ -3,6 +3,8 @@ import { fetchVendors, postData, updateData, deleteData } from '../api/api';
 import { Building2 } from 'lucide-react';
 import { useAuthTokenSync } from '../api/auth';
 import { motion } from 'framer-motion';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function AddVendor() {
     useAuthTokenSync();
@@ -12,6 +14,7 @@ export default function AddVendor() {
     const [isLoading, setIsLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [editVendorName, setEditVendorName] = useState<string | null>(null);
+    const [showConfirm, setShowConfirm] = useState<{ open: boolean, vendor: any | null }>({ open: false, vendor: null });
 
     useEffect(() => {
         const getVendors = async () => {
@@ -44,11 +47,25 @@ export default function AddVendor() {
         setForm({ vendor_name: '' });
     };
 
-    const handleDelete = async (vendor: any) => {
-        if (window.confirm(`Delete vendor '${vendor.vendor_name}'?`)) {
-            await deleteData('vendors', vendor.vendor_name);
-            setVendors(await fetchVendors());
+    const handleDelete = (vendor: any) => {
+        setShowConfirm({ open: true, vendor });
+    };
+
+    const confirmDelete = async () => {
+        if (showConfirm.vendor) {
+            try {
+                await deleteData('vendors', showConfirm.vendor.vendor_name);
+                setVendors(await fetchVendors());
+                toast.success('Vendor deleted successfully');
+            } catch {
+                toast.error('Failed to delete vendor');
+            }
         }
+        setShowConfirm({ open: false, vendor: null });
+    };
+
+    const cancelDelete = () => {
+        setShowConfirm({ open: false, vendor: null });
     };
 
     const handleSubmitWrapper = async (e: React.FormEvent) => {
@@ -108,13 +125,13 @@ export default function AddVendor() {
                                     required
                                     value={form.vendor_name}
                                     onChange={handleChange}
-                                    className="block w-full rounded-lg border border-purple-400 bg-gray-50 px-4 py-3 text-gray-900 text-base shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition placeholder-gray-400"
+                                    className="block w-full rounded-lg border border-green-400 bg-gray-50 px-4 py-3 text-gray-900 text-base shadow-sm focus:border-green-500 focus:ring-2 focus:ring-purple-200 transition placeholder-gray-400"
                                 />
                             </div>
                             <div>
                                 <button
                                     type="submit"
-                                    className="w-full py-4 px-6 rounded-xl font-bold text-xl bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-300 focus:ring-offset-2"
+                                    className="w-full py-4 px-6 rounded-xl font-bold text-xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2"
                                 >
                                     {editMode ? 'Update Vendor' : 'Add Vendor'}
                                 </button>
@@ -171,6 +188,29 @@ export default function AddVendor() {
                     </div>
                 </motion.div>
             </div>
+            {showConfirm.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-900">Confirm Delete</h2>
+                        <p className="mb-6 text-gray-700">Are you sure you want to delete vendor <span className="font-bold">{showConfirm.vendor?.vendor_name}</span>?</p>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={cancelDelete} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold">Cancel</button>
+                            <button onClick={confirmDelete} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                aria-label="Notification Toast"
+            />
         </motion.div>
     );
 }

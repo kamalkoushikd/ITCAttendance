@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Building2, UserCheck, MapPin, Calendar } from 'lucide-react';
-import { useAuthTokenSync } from '../api/auth';
+import { Users, Building2, UserCheck, MapPin, Calendar, UserLock, ListChecks } from 'lucide-react';
+import { useAuthTokenSync, useAuth } from '../api/auth';
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -23,7 +23,7 @@ const MenuItem = ({ icon, title, description, to, color }: MenuItemProps) => {
       // These interaction animations remain.
       whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}
       whileTap={{ scale: 0.98 }}
-      
+
       // A specific, faster transition is defined for the hover and tap states.
       // This makes the UI feel much more responsive.
       transition={{ type: 'tween', ease: 'easeOut', duration: 0.2 }}
@@ -47,6 +47,8 @@ const MenuItem = ({ icon, title, description, to, color }: MenuItemProps) => {
 
 export default function Home() {
   useAuthTokenSync();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const menuItems: MenuItemProps[] = [
     {
@@ -83,6 +85,20 @@ export default function Home() {
       description: 'Configure billing cycles and automated payment schedules',
       to: '/add-billing-cycle-rule',
       color: 'border-teal-500'
+    },
+    {
+      icon: <UserLock className="text-slate-500 h-10 w-10" />,
+      title: 'Designation Management',
+      description: 'Configure designations and their associated permissions',
+      to: '/add-designation',
+      color: 'border-slate-500'
+    },
+    {
+      icon: <ListChecks className="text-orange-500 h-10 w-10" />,
+      title: 'Attendance Transactions',
+      description: 'View and filter all attendance records for all employees',
+      to: '/attendance-transactions',
+      color: 'border-orange-500'
     }
   ];
 
@@ -94,6 +110,18 @@ export default function Home() {
       transition={{ duration: 0.5 }}
     >
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => {
+              localStorage.removeItem('jwtToken');
+              logout();
+              navigate('/login');
+            }}
+            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-all"
+          >
+            Logout
+          </button>
+        </div>
         <div className="text-center mb-10">
           <motion.h1
             className="text-4xl font-extrabold text-gray-900 sm:text-5xl mb-4"

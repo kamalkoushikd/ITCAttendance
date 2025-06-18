@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'https://backend.attendance.kamalkoushikd.cfd'; // Update with your backend URL
 
 // JWT token storage
 let jwtToken: string | null = localStorage.getItem('jwtToken');
@@ -16,9 +16,16 @@ export const api = axios.create({
 
 // Interceptor to update token on each request
 api.interceptors.request.use((config) => {
-  if (jwtToken) {
+  // Always get the latest token from localStorage
+  const token = localStorage.getItem('jwtToken');
+  if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${jwtToken}`;
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // Remove Authorization header if no token
+    if (config.headers && config.headers.Authorization) {
+      delete config.headers.Authorization;
+    }
   }
   return config;
 });
@@ -103,4 +110,24 @@ export const fetchBillingCycleRules = async () => {
     console.error('Error fetching billing cycle rules:', error);
     return [];
   }
+};
+
+// Fetch designations for a vendor (with token automatically handled by axios instance)
+export const fetchDesignations = async (vendor_name?: string) => {
+  let url = '/api/designations';
+  if (vendor_name) url += `?vendor_name=${encodeURIComponent(vendor_name)}`;
+  const response = await api.get(url);
+  return response.data;
+};
+
+// Fetch employees under the logged-in approver
+export const fetchApproverEmployees = async () => {
+  // Use the api instance, which already attaches the Authorization header via interceptor
+  console.log(localStorage.getItem('jwtToken')); // Debugging line to check token
+  const response = await api.get('/api/employees');
+  if (Array.isArray(response.data)) {
+    console.log('Fetched employees:', response.data); // Debugging line
+    return response.data;
+  }
+  return [];
 };

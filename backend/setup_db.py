@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
-from models import Base
+from models import Base, Vendor, Location, Approver, BillingCycleRule, Designation, Employee
 
 load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///attendance.db')
